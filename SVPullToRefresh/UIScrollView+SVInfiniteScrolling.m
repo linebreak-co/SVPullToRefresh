@@ -188,8 +188,13 @@ UIEdgeInsets scrollViewOriginalContentInsets;
 #pragma mark - Observing
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if([keyPath isEqualToString:@"contentOffset"])
-        [self scrollViewDidScroll:[[change valueForKey:NSKeyValueChangeNewKey] CGPointValue]];
+    if([keyPath isEqualToString:@"contentOffset"]) {
+        CGPoint newPoint = [[change valueForKey:NSKeyValueChangeNewKey] CGPointValue];
+        //only excute when pull up
+        if (newPoint.y >= 0) {
+            [self scrollViewDidScroll:newPoint];
+        }
+    }
     else if([keyPath isEqualToString:@"contentSize"]) {
         [self layoutSubviews];
         self.frame = CGRectMake(0, self.scrollView.contentSize.height, self.bounds.size.width, SVInfiniteScrollingViewHeight);
@@ -201,7 +206,7 @@ UIEdgeInsets scrollViewOriginalContentInsets;
         CGFloat scrollViewContentHeight = self.scrollView.contentSize.height;
         CGFloat scrollOffsetThreshold = MAX(scrollViewContentHeight - self.scrollView.bounds.size.height, 0);
         CGFloat yVelocity = [self.scrollView.panGestureRecognizer velocityInView:self.scrollView].y;
-        
+
         if(!self.scrollView.isDragging && self.state == SVInfiniteScrollingStateTriggered)
             self.state = SVInfiniteScrollingStateLoading;
         else if(yVelocity < 0 && contentOffset.y > scrollOffsetThreshold && self.state == SVInfiniteScrollingStateStopped && self.scrollView.isDragging)
